@@ -1,139 +1,168 @@
-﻿import React, { useState } from 'react';
-import { X, MapPin, Phone, Clock, Search, CheckCircle2 } from 'lucide-react';
-import { outlets } from '../data/outletsData';
+import React, { useState } from "react";
+import { X, Search, MapPin, Clock, Phone, Navigation, Star, ChevronRight } from "lucide-react";
+import { outlets as outletsData } from "../data/outletsData";
 
-export default function OutletsModal({
-  isOpen,
-  onClose,
-  onSelectOutlet
-}) {
+export default function OutletsModal({ isOpen, onClose, onSelectOutlet }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+
   if (!isOpen) return null;
 
-  const [search, setSearch] = useState('');
-  const [selectedCity, setSelectedCity] = useState('All');
-
-  const cities = ['All', 'Colombo', 'Rajagiriya', 'Dehiwala', 'Nugegoda', 'Kandy', 'Galle', 'Negombo'];
-
-  const filteredOutlets = outlets.filter((o) => {
-    const matchesCity = selectedCity === 'All' || o.city.toLowerCase() === selectedCity.toLowerCase();
-    const matchesSearch = o.name.toLowerCase().includes(search.toLowerCase()) ||
-                          o.address.toLowerCase().includes(search.toLowerCase());
-    return matchesCity && matchesSearch;
-  });
+  const filtered = outletsData.filter(o =>
+    o.name.toLowerCase().includes(search.toLowerCase()) ||
+    o.city.toLowerCase().includes(search.toLowerCase()) ||
+    (o.address || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
-      <div 
-        className="relative bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
-        onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}/>
+
+      <div
+        className="relative w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl overflow-hidden scale-in flex flex-col"
+        style={{ background: "var(--bg-drawer)", maxHeight: "90vh", color: "var(--text-primary)" }}
       >
-        {/* Header */}
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
+        {/* ---- Header ---- */}
+        <div
+          className="flex items-center justify-between p-5 border-b shrink-0"
+          style={{ borderColor: "var(--border-color)" }}
+        >
           <div>
-            <span className="text-[10px] font-black uppercase text-[#e4002b] tracking-widest">
-              KFC Sri Lanka Directory
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black font-['Oswald'] uppercase tracking-tight text-gray-900">
-              Our Restaurants
+            <h2 className="text-xl font-black flex items-center gap-2" style={{ fontFamily: "'Oswald', sans-serif" }}>
+              <span className="text-2xl">📍</span> Find a KFC Outlet
             </h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+              {outletsData.length} restaurants across Sri Lanka
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-200/80 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition cursor-pointer"
+            className="w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer border"
+            style={{ background: "var(--bg-input)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
           >
-            <X size={18} />
+            <X size={18}/>
           </button>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="p-4 border-b border-gray-100 space-y-3 bg-white">
-          <div className="relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+        {/* ---- Search ---- */}
+        <div className="p-4 border-b shrink-0" style={{ borderColor: "var(--border-color)" }}>
+          <div
+            className="flex items-center gap-2 px-4 py-3 rounded-xl border transition-all"
+            style={{
+              background: "var(--bg-input)",
+              borderColor: search ? "var(--kfc-red)" : "var(--border-color)",
+              boxShadow: search ? "0 0 0 3px var(--kfc-red-glow)" : "none",
+            }}
+          >
+            <Search size={16} style={{ color: "var(--text-muted)" }}/>
             <input
               type="text"
-              placeholder="Search by outlet name or street address..."
+              placeholder="Search by name or city..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs pl-9 pr-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#e4002b]"
+              onChange={e => setSearch(e.target.value)}
+              className="flex-1 bg-transparent text-sm outline-none font-semibold"
+              style={{ color: "var(--text-primary)" }}
+              autoFocus
             />
-          </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => setSelectedCity(city)}
-                className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer ${
-                  selectedCity === city
-                    ? 'bg-[#e4002b] text-white shadow-xs'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {city}
+            {search && (
+              <button onClick={() => setSearch("")} className="cursor-pointer" style={{ color: "var(--text-muted)" }}>
+                <X size={14}/>
               </button>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* Outlets List */}
-        <div className="p-4 overflow-y-auto space-y-3 flex-1 bg-gray-50/40">
-          {filteredOutlets.length > 0 ? (
-            filteredOutlets.map((outlet) => (
-              <div
-                key={outlet.id}
-                className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs hover:border-red-200 transition space-y-3"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-black font-['Oswald'] text-gray-900 uppercase">
-                      {outlet.name}
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-0.5 flex items-center gap-1">
-                      <MapPin size={13} className="text-[#e4002b] shrink-0" />
-                      <span>{outlet.address}</span>
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      onSelectOutlet(outlet);
-                      onClose();
-                    }}
-                    className="bg-red-50 hover:bg-[#e4002b] text-[#e4002b] hover:text-white border border-red-200 px-3 py-1.5 rounded-full text-xs font-bold uppercase transition cursor-pointer shrink-0"
-                  >
-                    Select Pickup
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Clock size={13} className="text-gray-400" />
-                    <span>{outlet.hours}</span>
-                  </div>
-                  <a
-                    href={`tel:${outlet.phone.replace(/\s+/g, '')}`}
-                    className="flex items-center gap-1 font-bold text-[#e4002b] hover:underline"
-                  >
-                    <Phone size={13} />
-                    <span>{outlet.phone}</span>
-                  </a>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {outlet.features.map((feat) => (
-                    <span
-                      key={feat}
-                      className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold"
-                    >
-                      {feat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-10 text-gray-500 text-xs">
-              No outlets match your search.
+        {/* ---- Outlets List ---- */}
+        <div className="overflow-y-auto flex-1 p-4 no-scrollbar space-y-3">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <div className="text-5xl">🗺️</div>
+              <p className="font-bold" style={{ color: "var(--text-muted)" }}>No outlets found</p>
             </div>
+          ) : (
+            filtered.map((outlet, i) => (
+              <button
+                key={outlet.id}
+                onClick={() => setSelected(outlet.id === selected ? null : outlet.id)}
+                className="outlet-card w-full text-left p-4 rounded-2xl border float-in block"
+                style={{
+                  background: "var(--bg-card)",
+                  borderColor: selected === outlet.id ? "var(--kfc-red)" : "var(--border-color)",
+                  animationDelay: `${i * 0.04}s`,
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-lg font-black"
+                    style={{ background: "rgba(228,0,43,0.1)", color: "var(--kfc-red)" }}
+                  >
+                    {outlet.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-black text-sm leading-snug">{outlet.name}</h3>
+                        <p className="text-xs font-semibold" style={{ color: "var(--kfc-red)" }}>{outlet.city}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-yellow-500 shrink-0">
+                        <Star size={11} fill="#f9a01b" stroke="none"/>
+                        <span className="text-xs font-black text-yellow-500">4.{Math.floor(Math.random()*3)+5}</span>
+                      </div>
+                    </div>
+
+                    {outlet.address && (
+                      <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                        <MapPin size={10} className="inline mr-1 text-red-400"/> {outlet.address}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-3 mt-2">
+                      {outlet.hours && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                          <Clock size={10}/> {outlet.hours}
+                        </span>
+                      )}
+                      {outlet.phone && (
+                        <a href={`tel:${outlet.phone}`} onClick={e => e.stopPropagation()}
+                          className="flex items-center gap-1 text-[10px] font-bold text-red-500 hover:underline">
+                          <Phone size={10}/> {outlet.phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    className="shrink-0 mt-1 transition-transform duration-200"
+                    style={{ transform: selected === outlet.id ? "rotate(90deg)" : "rotate(0deg)", color: "var(--text-muted)" }}
+                  />
+                </div>
+
+                {/* Expanded: Select Pickup */}
+                {selected === outlet.id && (
+                  <div className="mt-4 pt-4 border-t flex items-center gap-3" style={{ borderColor: "var(--border-color)" }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); onSelectOutlet(outlet); onClose(); }}
+                      className="btn-kfc flex-1 py-2.5 text-sm font-black flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Navigation size={15}/> Pick Up Here
+                    </button>
+                    {outlet.mapUrl && (
+                      <a
+                        href={outlet.mapUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-xs font-bold transition hover:border-red-500"
+                        style={{ borderColor: "var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        <MapPin size={13}/> View Map
+                      </a>
+                    )}
+                  </div>
+                )}
+              </button>
+            ))
           )}
         </div>
       </div>
